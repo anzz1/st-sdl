@@ -46,7 +46,7 @@
 
 #define USAGE \
 	"st " VERSION " (c) 2010-2012 st engineers\n" \
-	"usage: st [-q] [-o file] [-e command ...]\n"
+	"usage: st [-q] [-w] [-x] [-o file] [-e command ...]\n"
 
 /* Arbitrary sizes */
 #define ESC_BUF_SIZ   256
@@ -305,6 +305,8 @@ static pid_t pid;
 static int iofd = -1;
 static char **opt_cmd = NULL;
 static char *opt_io = NULL;
+static char opt_nocwd = 0;
+static char opt_noenv = 0;
 
 ssize_t
 xwrite(int fd, char *s, size_t len) {
@@ -510,23 +512,28 @@ void
 execsh(void) {
 	char **args;
 	char *envshell = getenv("SHELL");
-	const struct passwd *pass = getpwuid(getuid());
 
-	unsetenv("COLUMNS");
-	unsetenv("LINES");
-	unsetenv("TERMCAP");
+	if (!opt_noenv) {
+		const struct passwd *pass = getpwuid(getuid());
 
-	if(pass) {
-		setenv("LOGNAME", pass->pw_name, 1);
-		setenv("USER", pass->pw_name, 1);
-		setenv("SHELL", pass->pw_shell, 0);
-		setenv("HOME", pass->pw_dir, 0);
+		unsetenv("COLUMNS");
+		unsetenv("LINES");
+		unsetenv("TERMCAP");
+
+		if(pass) {
+			setenv("LOGNAME", pass->pw_name, 1);
+			setenv("USER", pass->pw_name, 1);
+			setenv("SHELL", pass->pw_shell, 0);
+			setenv("HOME", pass->pw_dir, 0);
+		}
+
+		// ooh so pretty
+		setenv("PS1", "\\[\\033[32m\\]\\W\\[\\033[00m\\]\\$ ", 1);
+		setenv("TERM", termname, 1);
 	}
 
-	// ooh so pretty
-	setenv("PS1", "\\[\\033[32m\\]\\W\\[\\033[00m\\]\\$ ", 1);
-
-	chdir(getenv("HOME"));
+	if (!opt_nocwd)
+		chdir(getenv("HOME"));
 
 	signal(SIGCHLD, SIG_DFL);
 	signal(SIGHUP, SIG_DFL);
@@ -536,7 +543,6 @@ execsh(void) {
 	signal(SIGALRM, SIG_DFL);
 
 	DEFAULT(envshell, shell);
-	setenv("TERM", termname, 1);
 	args = opt_cmd ? opt_cmd : (char *[]){envshell, "-i", NULL};
 	execvp(args[0], args);
 	exit(EXIT_FAILURE);
@@ -2103,6 +2109,12 @@ main(int argc, char *argv[]) {
                 break;
             case 'q':
                 active = show_help = 0;
+                break;
+            case 'w':
+                opt_nocwd = 1;
+                break;
+            case 'x':
+                opt_noenv = 1;
                 break;
             default:
                 die(USAGE);
