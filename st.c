@@ -272,6 +272,7 @@ static void tfulldirt(void);
 
 static void ttynew(void);
 static void ttyread(void);
+static void ttyresize(void);
 static void ttywrite(const char *, size_t);
 
 static void xdraws(char *, Glyph, int, int, int, int);
@@ -1689,6 +1690,18 @@ xclear(int x1, int y1, int x2, int y2) {
 }
 
 void
+ttyresize(void) {
+	struct winsize w;
+
+	w.ws_row = term.row;
+	w.ws_col = term.col;
+	w.ws_xpixel = xw.tw;
+	w.ws_ypixel = xw.th;
+	if(ioctl(cmdfd, TIOCSWINSZ, &w) < 0)
+		fprintf(stderr, "Couldn't set window size: %s\n", SERRNO);
+}
+
+void
 sdlinit(void) {
 	fprintf(stderr, "SDL init\n");
 
@@ -1704,6 +1717,8 @@ sdlinit(void) {
     xw.h = 240;
 	xw.cw = 6;
     xw.ch = 8;
+	xw.tw = MAX(1, 2*borderpx + term.col * xw.cw);
+	xw.th = MAX(1, 2*borderpx + term.row * xw.ch);
 
 #ifdef MIYOOMINI
 	SDL_SetVideoMode(640, 480, 16, SDL_HWSURFACE);
@@ -1718,6 +1733,8 @@ sdlinit(void) {
 #endif
 
 	sdlresettitle();
+	ttyresize();
+
 	SDL_EnableKeyRepeat(200, 20);
 }
 
@@ -2124,10 +2141,9 @@ main(int argc, char *argv[]) {
 run:
     setlocale(LC_CTYPE, "");
     ttynew();
-    tnew((320 - 2) / 6, (240 - 2) / 8);
+    tnew(53, 29);
     sdlinit();
     init_keyboard();
     run();
 	return 0;
 }
-
