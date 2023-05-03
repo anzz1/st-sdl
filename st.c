@@ -2057,7 +2057,7 @@ run(void) {
 					quit=1;
 					break;
 				case SDL_KEYDOWN:
-					if(ev.key.state == SDL_PRESSED && ev.key.keysym.sym == SDLK_ESCAPE && !(ev.key.keysym.mod & KMOD_SYNTHETIC))
+					if(ev.key.state == SDL_PRESSED && ev.key.keysym.sym == KEY_QUIT && !(ev.key.keysym.mod & KMOD_SYNTHETIC))
 						quit=1;
 					else if(!handle_keyboard_event(&ev))
 						kpress(&ev);
