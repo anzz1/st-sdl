@@ -1919,9 +1919,9 @@ kpress(SDL_Event *ev) {
 	shift = e->keysym.mod & KMOD_SHIFT;
 
 #ifdef MIYOOMINI
-	if (!(e->keysym.mod & 0x2000)) {
-		if (ksym == SDLK_t) ksym = SDLK_BACKSPACE;
-		else if (ksym == SDLK_BACKSPACE) ksym = SDLK_PAGEDOWN;
+	if (!(e->keysym.mod & KMOD_SYNTHETIC)) {
+		if (ksym == SDLK_t) ksym = SDLK_BACKSPACE; // T (R1) -> BACKSPACE
+		else if (ksym == SDLK_BACKSPACE) ksym = SDLK_PAGEDOWN; // BACKSPACE (R2) -> PAGEDOWN
 	}
 #endif
 
@@ -2057,7 +2057,7 @@ run(void) {
 					quit=1;
 					break;
 				case SDL_KEYDOWN:
-					if(ev.key.state == SDL_PRESSED && ev.key.keysym.sym == SDLK_ESCAPE && !(ev.key.keysym.mod & 0x2000))
+					if(ev.key.state == SDL_PRESSED && ev.key.keysym.sym == SDLK_ESCAPE && !(ev.key.keysym.mod & KMOD_SYNTHETIC))
 						quit=1;
 					else if(!handle_keyboard_event(&ev))
 						kpress(&ev);
