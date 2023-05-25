@@ -15,5 +15,5 @@ LIBS = -lc -L${SYSROOT}/usr/lib -lSDL -lpthread -lmi_sys -lmi_gfx -lmi_ao -lmi_c
 # flags
 CPPFLAGS = -DVERSION=\"${VERSION}\" -DMIYOOMINI -fPIC
 CFLAGS = -Os -marm -mtune=cortex-a7 -march=armv7ve+simd -mfpu=neon-vfpv4 -mfloat-abi=hard
-CFLAGS += -g ${INCS} ${CPPFLAGS} -Wall -ffunction-sections -fdata-sections -std=gnu99 
-LDFLAGS += -g ${LIBS} -Wl,--gc-sections -s
+CFLAGS += ${INCS} ${CPPFLAGS} -Wall -ffunction-sections -fdata-sections -std=gnu99 
+LDFLAGS += ${LIBS} -Wl,--gc-sections -s
