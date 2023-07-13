@@ -335,6 +335,7 @@ xmalloc(size_t len) {
 
 #ifdef MIYOOMINI	// TODO: rewrite in assember?
 //	upscale 320x240x16 -> 640x480x32 with rotate180
+#if 0
 void upscale_and_rotate(uint32_t* restrict src, uint32_t* restrict dst) {
 	dst = dst + 640*480 -1;
 	uint32_t x, y, pix, dpix;
@@ -357,13 +358,35 @@ void upscale_and_rotate(uint32_t* restrict src, uint32_t* restrict dst) {
 		}
 	}
 }
+#endif
+void upscale(uint32_t* restrict src, uint32_t* restrict dst) {
+	uint32_t x, y, pix, dpix;
+	for(y = 240; y>0 ; y--, dst+=640) {
+		for(x = 320/2; x>0 ; x--, dst+=4) {
+			pix=*src++;
+					//   00000000RRRRRRRRGGGGGGGGBBBBBBBB
+			dpix=	((pix>>2) &0b00000000000000000000000000000111)|
+				((pix>>1) &0b00000000000000000000001100000000)|
+				((pix<<3) &0b00000000000001110000000011111000)|
+				((pix<<5) &0b00000000000000001111110000000000)|
+				((pix<<8) &0b00000000111110000000000000000000);
+			*dst=dpix; *(dst+1)=dpix; *(dst+640)=dpix; *(dst+641)=dpix;
+			dpix=	((pix>>8) &0b00000000111110000000000000000000)|
+				((pix>>11)&0b00000000000000001111110000000000)|
+				((pix>>13)&0b00000000000001110000000011111000)|
+				((pix>>17)&0b00000000000000000000001100000000)|
+				((pix>>18)&0b00000000000000000000000000000111);
+			*(dst+2)=dpix; *(dst+3)=dpix; *(dst+642)=dpix; *(dst+643)=dpix;
+		}
+	}
+}
 static uint32_t* fb0_map = 0;
 void
 xflip(void) {
 	if(xw.win == NULL) return;
 	memcpy(screen->pixels, xw.win->pixels, 320*240*2);
 	draw_keyboard(screen);
-	upscale_and_rotate(screen->pixels,fb0_map);
+	upscale(screen->pixels,fb0_map);
 }
 #else
 void
